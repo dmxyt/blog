@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DaemonixGames Blog Profesional</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Montserrat:wght@500&display=swap" rel="stylesheet">
+<style>
+/* RESET */
+*{box-sizing:border-box;margin:0;padding:0;}
+body,html{font-family:'Poppins',sans-serif;background:#0c0c0c;color:#fff;overflow-x:hidden;}
+header{background:linear-gradient(90deg,#ff00cc,#3333ff);padding:20px;text-align:center;font-size:28px;font-weight:700;color:#fff;letter-spacing:1px;box-shadow:0 0 25px rgba(255,0,255,0.5);position:relative;z-index:10;text-shadow:0 0 6px #ff00cc,0 0 10px #3333ff;}
+/* HAMBURGUESA */
+.menu-toggle{display:none;position:absolute;right:20px;top:25px;flex-direction:column;cursor:pointer;z-index:20;}
+.menu-toggle span{background:#fff;height:3px;width:25px;margin:4px 0;border-radius:3px;transition:0.3s;}
+nav{position:fixed;top:0;left:0;height:100%;width:250px;background:rgba(20,20,20,0.95);padding:60px 20px;display:flex;flex-direction:column;gap:20px;transform:translateX(-300px);transition:0.3s;z-index:15;}
+nav a{color:#ff66cc;text-decoration:none;font-weight:600;font-size:18px;transition:0.2s;}
+nav a:hover{color:#fff;}
+nav.active{transform:translateX(0);}
+.container{width:90%;max-width:1000px;margin:100px auto 50px auto;transition:opacity 0.4s;text-align:center;}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:30px;justify-items:center;}
+.card{position:relative;background:#1a1a1a;border-radius:15px;overflow:hidden;box-shadow:0 0 20px rgba(255,0,255,0.3);transition:transform 0.4s,box-shadow 0.4s;width:100%;}
+.card:hover{transform:translateY(-5px) scale(1.02);box-shadow:0 0 50px rgba(255,0,255,0.7);}
+.card img{width:100%;height:200px;object-fit:cover;transition:transform 0.4s;}
+.card-content{padding:20px;}
+.card h2{color:#ff66cc;font-family:'Montserrat',sans-serif;font-size:20px;text-shadow:0 0 5px #ff66cc;margin-bottom:10px;}
+.card p{color:#ccc;font-size:15px;margin-bottom:10px;}
+.comment{margin-top:10px;padding:10px;background:#222;border-radius:10px;font-size:14px;display:flex;align-items:center;}
+.comment img{width:30px;height:30px;border-radius:50%;margin-right:10px;}
+.comment strong{color:#ff66cc;margin-right:5px;}
+button, input, textarea{outline:none;}
+button{padding:10px 20px;border-radius:8px;background:linear-gradient(90deg,#ff00cc,#3333ff);color:#fff;font-weight:600;cursor:pointer;transition:0.3s;}
+button:hover{opacity:0.9;transform:scale(1.05);}
+input,textarea{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:none;background:#111;color:#fff;transition:0.3s;}
+input:focus,textarea:focus{box-shadow:0 0 10px #ff00cc;}
+.login,.dashboard,.register{background:#1a1a1a;padding:30px;border-radius:15px;box-shadow:0 0 25px rgba(0,255,255,0.4);margin:20px auto;max-width:500px;transition:0.4s;text-align:left;}
+.logout{text-align:right;}
+.logout button{background:#ff4444;}
+.sidebar{display:none;}
+#bgCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;}
+@media(max-width:900px){
+  .menu-toggle{display:flex;}
+}
+</style>
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+<header>
+  Daemonix - Blog
+  <div class="menu-toggle" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+</header>
+<nav id="menu">
+  <a href="#" onclick="showPublic()">Inicio</a>
+  <a href="#" onclick="showLogin()">Login Admin</a>
+  <a href="#" onclick="showUserLogin()">Login Usuario</a>
+  <a href="#" onclick="showRegister()">Registrarse</a>
+</nav>
+
+<div class="container" id="public-view">
+  <div class="cards-grid" id="posts"></div>
+</div>
+
+<div class="container login" id="login-view" style="display:none;">
+  <h2>Login Administrador</h2>
+  <input type="text" id="username" placeholder="Usuario">
+  <input type="password" id="password" placeholder="Contraseña">
+  <button onclick="login()">Entrar</button>
+  <button style="margin-top:10px;" onclick="showPublic()">Volver</button>
+</div>
+
+<div class="container login" id="user-login-view" style="display:none;">
+  <h2>Login Usuario</h2>
+  <input type="text" id="user-username" placeholder="Usuario">
+  <input type="password" id="user-password" placeholder="Contraseña">
+  <button onclick="loginUser()">Entrar</button>
+  <button style="margin-top:10px;" onclick="showPublic()">Volver</button>
+</div>
+
+<div class="container register" id="register-view" style="display:none;">
+  <h2>Registrarse</h2>
+  <input type="text" id="reg-username" placeholder="Usuario">
+  <input type="password" id="reg-password" placeholder="Contraseña">
+  <input type="text" id="reg-avatar" placeholder="URL Avatar (Opcional)">
+  <button onclick="registerUser()">Registrarse</button>
+  <button style="margin-top:10px;" onclick="showPublic()">Volver</button>
+</div>
+
+<div class="container dashboard" id="dashboard-view" style="display:none;">
+  <div class="logout">
+    <button onclick="logout()">Cerrar sesión</button>
+  </div>
+  <h2>Panel Administrador</h2>
+  <input type="text" id="post-title" placeholder="Título de la entrada">
+  <input type="text" id="post-image" placeholder="URL de la imagen">
+  <textarea id="post-content" rows="6" placeholder="Contenido..."></textarea>
+  <button onclick="addPost()">Publicar / Actualizar</button>
+  <div id="preview"></div>
+  <h3>Entradas Publicadas</h3>
+  <div id="admin-posts" class="cards-grid"></div>
+</div>
+
+<script>
+// MENU HAMBURGUESA
+function toggleMenu(){document.getElementById("menu").classList.toggle("active");}
+
+// --- STORAGE INICIAL ---
+let editIndex=-1;
+if(!localStorage.getItem("posts")) localStorage.setItem("posts","[]");
+if(!localStorage.getItem("users")) localStorage.setItem("users","[]");
+if(!localStorage.getItem("comments")) localStorage.setItem("comments","[]");
+if(!localStorage.getItem("likes")) localStorage.setItem("likes","[]");
+
+const ADMINS = [
+  { user:"Alexios", pass:"84ffd8df", avatar:"https://via.placeholder.com/40/ff00cc/ffffff?text=A1"},
+  { user:"dmxmin", pass:"76772dmx", avatar:"https://via.placeholder.com/40/3333ff/ffffff?text=A2"}
+];
+let USERS=JSON.parse(localStorage.getItem("users"));
+
+// --- VISTAS ---
+function showLogin(){hideAll();document.getElementById("login-view").style.display="block";}
+function showUserLogin(){hideAll();document.getElementById("user-login-view").style.display="block";}
+function showRegister(){hideAll();document.getElementById("register-view").style.display="block";}
+function showDashboard(){hideAll();document.getElementById("dashboard-view").style.display="block";loadPosts();}
+function showPublic(){hideAll();document.getElementById("public-view").style.display="block";loadPosts();}
+
+function hideAll(){
+    document.getElementById("login-view").style.display="none";
+    document.getElementById("user-login-view").style.display="none";
+    document.getElementById("register-view").style.display="none";
+    document.getElementById("dashboard-view").style.display="none";
+    document.getElementById("public-view").style.display="none";
+}
+
+// --- LOGIN / REGISTRO ---
+function login(){
+    const u=document.getElementById("username").value;
+    const p=document.getElementById("password").value;
+    const f=ADMINS.find(a=>a.user===u&&a.pass===p);
+    if(f){localStorage.setItem("loggedInAdmin","true");showDashboard();}
+    else alert("Usuario o contraseña incorrectos");
+}
+
+function loginUser(){
+    const u=document.getElementById("user-username").value.trim();
+    const p=document.getElementById("user-password").value.trim();
+    const f=USERS.find(a=>a.username===u&&a.password===p);
+    if(f){localStorage.setItem("currentUser",u);alert("Bienvenido "+u);showPublic();}
+    else alert("Usuario o contraseña incorrectos");
+}
+
+function registerUser(){
+    const u=document.getElementById("reg-username").value.trim();
+    const p=document.getElementById("reg-password").value.trim();
+    const a=document.getElementById("reg-avatar").value.trim();
+    if(!u||!p)return alert("Completa todos los campos");
+    if(USERS.find(x=>x.username===u)) return alert("Usuario ya existe");
+    USERS.push({username:u,password:p,avatar:a});
+    localStorage.setItem("users",JSON.stringify(USERS));
+    localStorage.setItem("currentUser",u);
+    alert("Registro exitoso, bienvenido "+u);
+    showPublic();
+}
+
+function logout(){
+    localStorage.removeItem("loggedInAdmin");
+    localStorage.removeItem("currentUser");
+    showPublic();
+}
+
+// --- POSTS ---
+function loadPosts(filter=""){
+    const posts = JSON.parse(localStorage.getItem("posts")) || [];
+    const postContainer = document.getElementById("posts");
+    const adminPosts = document.getElementById("admin-posts");
+    postContainer.innerHTML = "";
+    if(adminPosts) adminPosts.innerHTML="";
+    const currentUser = localStorage.getItem("currentUser");
+    posts.forEach((post,index)=>{
+        if(filter && !post.title.toLowerCase().includes(filter.toLowerCase()) && !post.content.toLowerCase().includes(filter.toLowerCase())) return;
+        const imgURL = post.image || 'https://via.placeholder.com/300x180?text=Imagen';
+        // Card pública
+        const card = document.createElement("div"); card.className="card";
+        card.innerHTML=`<img src="${imgURL}"><div class="card-content"><h2>${post.title}</h2><p>${post.content}</p>
+            <div id="comments-${index}"></div>
+            ${currentUser?`<input type="text" id="comment-input-${index}" placeholder="Comentar..."><button onclick="addComment(${index})">Comentar</button>`:"<p style='color:#888;font-size:13px;margin-top:5px;'>Regístrate para comentar</p>"}
+            <div class="post-tools">
+                <button onclick="likePost(${index})">👍 Like <span id="likes-${index}">${(JSON.parse(localStorage.getItem("likes"))||[])[index]||0}</span></button>
+                <button onclick="sharePost(${index})">🔗 Compartir</button>
+            </div>
+        </div>`;
+        postContainer.appendChild(card);
+
+        // Admin cards
+        if(adminPosts){
+            const adminCard = document.createElement("div"); adminCard.className="card";
+            adminCard.innerHTML=`<img src="${imgURL}"><div class="card-content">
+                <h2>${post.title}</h2><p>${post.content}</p>
+                <div class="post-tools">
+                    <button onclick="editPost(${index})">✏️ Editar</button>
+                    <button onclick="deletePost(${index})">🗑️ Eliminar</button>
+                </div>
+            </div>`;
+            adminPosts.appendChild(adminCard);
+        }
+
+        renderComments(index);
+    });
+}
+
+// --- COMENTARIOS ---
+function renderComments(postIndex){
+    const commentsContainer = document.getElementById(`comments-${postIndex}`);
+    const comments = (JSON.parse(localStorage.getItem("comments"))||[]).filter(c=>c.post===postIndex);
+    commentsContainer.innerHTML="";
+    comments.forEach((c,i)=>{
+        const userObj = USERS.find(u=>u.username===c.user);
+        const avatar = userObj?.avatar || 'https://via.placeholder.com/30';
+        const div=document.createElement("div"); div.className="comment";
+        div.innerHTML=`<img src="${avatar}"><strong>${c.user}</strong>: ${c.text} ${c.user===localStorage.getItem("currentUser")?`<button onclick="deleteComment(${postIndex},${i})">🗑️</button>`:""}`;
+        commentsContainer.appendChild(div);
+    });
+}
+
+function addComment(postIndex){
+    const input=document.getElementById(`comment-input-${postIndex}`);
+    const text=input.value.trim();
+    const user = localStorage.getItem("currentUser");
+    if(!text||!user) return;
+    let comments = JSON.parse(localStorage.getItem("comments"))||[];
+    comments.push({post:postIndex,user,text});
+    localStorage.setItem("comments",JSON.stringify(comments));
+    input.value="";
+    renderComments(postIndex);
+}
+
+function deleteComment(postIndex,commentIndex){
+    let comments = JSON.parse(localStorage.getItem("comments"))||[];
+    comments = comments.filter((c,i)=>!(c.post===postIndex && i===commentIndex));
+    localStorage.setItem("comments",JSON.stringify(comments));
+    renderComments(postIndex);
+}
+
+// --- CRUD ADMIN ---
+function addPost(){
+    const title=document.getElementById("post-title").value.trim();
+    const content=document.getElementById("post-content").value.trim();
+    const image=document.getElementById("post-image").value.trim();
+    if(!title||!content) return alert("Completa todos los campos");
+    let posts = JSON.parse(localStorage.getItem("posts"))||[];
+    if(editIndex>=0){posts[editIndex]={title,content,image};editIndex=-1;}
+    else posts.unshift({title,content,image});
+    localStorage.setItem("posts",JSON.stringify(posts));
+    document.getElementById("post-title").value="";
+    document.getElementById("post-content").value="";
+    document.getElementById("post-image").value="";
+    document.getElementById("preview").innerHTML="";
+    loadPosts();
+}
+
+function editPost(index){
+    const posts = JSON.parse(localStorage.getItem("posts"))||[];
+    document.getElementById("post-title").value=posts[index].title;
+    document.getElementById("post-content").value=posts[index].content;
+    document.getElementById("post-image").value=posts[index].image||'';
+    editIndex=index;
+    updatePreview();
+}
+
+function deletePost(index){
+    if(!confirm("¿Seguro quieres eliminar este post?")) return;
+    let posts = JSON.parse(localStorage.getItem("posts"))||[];
+    posts.splice(index,1);
+    localStorage.setItem("posts",JSON.stringify(posts));
+    loadPosts();
+}
+
+// --- HERRAMIENTAS ---
+function likePost(index){
+    let likes = JSON.parse(localStorage.getItem("likes"))||[];
+    likes[index]=(likes[index]||0)+1;
+    localStorage.setItem("likes",JSON.stringify(likes));
+    const span=document.getElementById(`likes-${index}`);
+    if(span) span.textContent=likes[index];
+}
+
+function sharePost(index){
+    const url = window.location.href + "#post-" + index;
+    navigator.clipboard.writeText(url);
+    alert("Link copiado al portapapeles!");
+}
+
+// --- PREVIEW ---
+const preview=document.getElementById("preview");
+document.getElementById("post-title")?.addEventListener("input",updatePreview);
+document.getElementById("post-content")?.addEventListener("input",updatePreview);
+document.getElementById("post-image")?.addEventListener("input",updatePreview);
+function updatePreview(){
+    const t=document.getElementById("post-title").value;
+    const c=document.getElementById("post-content").value;
+    const i=document.getElementById("post-image").value||'https://via.placeholder.com/300x180?text=Imagen';
+    preview.innerHTML=`<div class="card"><img src="${i}"><div class="card-content"><h2>${t}</h2><p>${c}</p></div></div>`;
+}
+
+// --- FONDO GALÁCTICO ---
+const canvas=document.getElementById("bgCanvas");
+const ctx=canvas.getContext("2d");
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+resizeCanvas(); window.addEventListener("resize",resizeCanvas);
+let stars=[];
+for(let i=0;i<200;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,radius:Math.random()*1.5+0.5,dx:(Math.random()-0.5)*0.3,dy:(Math.random()-0.5)*0.3});}
+function animateStars(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    stars.forEach(s=>{
+        s.x+=s.dx;s.y+=s.dy;s.radius=Math.max(0.1,s.radius+Math.sin(Date.now()*0.002)*0.05);
+        if(s.x<0)s.x=canvas.width;if(s.x>canvas.width)s.x=0;
+        if(s.y<0)s.y=canvas.height;if(s.y>canvas.height)s.y=0;
+        ctx.beginPath();ctx.arc(s.x,s.y,s.radius,0,Math.PI*2);ctx.fillStyle="#fff";ctx.fill();
+    });
+    requestAnimationFrame(animateStars);
+}
+animateStars();
+
+// --- INICIO AUTOMÁTICO ---
+if(localStorage.getItem("loggedInAdmin")==="true") showDashboard();
+else showPublic();
+</script>
+</body>
+</html>
